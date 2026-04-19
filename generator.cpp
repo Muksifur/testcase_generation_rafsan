@@ -55,6 +55,8 @@ class Generator {
     return dist(rng_);
   }
 
+  std::mt19937_64& Engine() { return rng_; }
+
   std::vector<int> GeneratePrimes(int limit) {
     std::vector<bool> is_prime(limit + 1, true);
     is_prime[0] = false;
@@ -107,6 +109,10 @@ std::vector<Zone> BuildZones(int X,
                              const std::vector<int>& primes,
                              Generator& gen) {
   int total_primes = static_cast<int>(primes.size());
+  int base1 = std::max(0, total_primes - 200);
+  int base2 = std::max(0, total_primes - 150);
+  int span1 = std::max(1, std::min(100, total_primes - base1));
+  int span2 = std::max(1, std::min(100, total_primes - base2));
   int zone_count = (X + zone_len - 1) / zone_len;
   std::vector<Zone> zones(zone_count);
 
@@ -120,8 +126,8 @@ std::vector<Zone> BuildZones(int X,
     int inner_start = start + len / 4;
     int inner_end = start + (3 * len) / 4;
 
-    int idx1 = total_primes - 200 + (i * 7) % 100;
-    int idx2 = total_primes - 150 + (i * 11) % 100;
+    int idx1 = base1 + (i * 7) % span1;
+    int idx2 = base2 + (i * 11) % span2;
     int p1 = primes[idx1];
     int p2 = primes[idx2];
 
@@ -179,10 +185,10 @@ std::vector<int> SelectPositions(int N,
   }
 
   if (static_cast<int>(selected.size()) > N) {
-    std::shuffle(selected.begin(), selected.end(), std::mt19937{std::random_device{}()});
+    std::shuffle(selected.begin(), selected.end(), gen.Engine());
     selected.resize(N);
   } else if (static_cast<int>(selected.size()) < N) {
-    std::shuffle(remaining.begin(), remaining.end(), std::mt19937{std::random_device{}()});
+    std::shuffle(remaining.begin(), remaining.end(), gen.Engine());
     int needed = N - static_cast<int>(selected.size());
     if (needed > static_cast<int>(remaining.size())) {
       needed = static_cast<int>(remaining.size());
